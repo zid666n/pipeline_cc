@@ -1,0 +1,71 @@
+CREAtE TABLE users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(191) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT("creator") NOT NULL
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+    UNIQUE(email)
+);
+
+CREATE TABLE channels (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    platform VARCHAR(30) NOT NULL,
+    handle_name VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+    CONSTRAINT fk_channels_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE contents (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    channel_id BIGINT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NULL,
+    script_draft TEXT NULL,
+    format_type VARCHAR(30) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'idea',
+    priority VARCHAR(10) NOT NULL DEFAULT 'medium',
+    scheduled_date DATE NULL,
+    published_date DATE NULL,
+    published_url VARCHAR(255) NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    CONSTRAINT chk_format_type CHECK (format_type IN ('short_video', 'long_video', 'carousel', 'single_post')),
+    CONSTRAINT chk_status CHECK (status IN ('idea', 'scripting', 'recording', 'editing', 'ready', 'published')),
+    CONSTRAINT chk_priority CHECK (priority IN ('low', 'medium', 'high')),
+    
+    CONSTRAINT fk_contents_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_contents_channel FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE content_checklists (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    content_id BIGINT NOT NULL,
+    task_name VARCHAR(255) NOT NULL,
+    is_completed BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_checklists_content FOREIGN KEY (content_id) REFERENCES contents(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE content_metrics (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    content_id BIGINT NOT NULL,
+    recorded_at DATE NOT NULL,
+    views_count INT NOT NULL DEFAULT 0,
+    likes_count INT NOT NULL DEFAULT 0,
+    comments_count INT NOT NULL DEFAULT 0,
+    shares_count INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_metrics_content FOREIGN KEY (content_id) REFERENCES contents(id) ON DELETE CASCADE,
+    
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
